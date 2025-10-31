@@ -1,49 +1,43 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# -------- args --------
-APP_NAME="${1:-myrustapp}"
-REPO_URL="${2:-git@github.com:LehaVasylenko/rust_echo.git}"
-BRANCH="${3:-main}"
-RUN_USER_ARG="${4:-appuser}"
+### === НАСТРОЙКИ ПОД СЕБЯ (минимум) ===
+APP_NAME="rust-echo"                                   # имя сервиса/бинаря
+REPO_URL="git@github.com:LehaVasylenko/rust_echo.git"  # git ssh/https URL
+BRANCH="main"                                          # ветка
 
-# -------- require root --------
-if [[ $EUID -ne 0 ]]; then
-  echo "Please run as root: sudo bash $0 <app> <repo> [branch] [run-user]" >&2
-  exit 1
-fi
-
-# Кто будет БИЛДИТЬ (обычно твой обычный юзер, у которого стоит Rust):
-BUILD_USER="${SUDO_USER:-$(logname)}"
-# Под кем будет РАБОТАТЬ сервис:
-RUN_USER="$RUN_USER_ARG"
-
+### === КОНСТАНТЫ ===
+USER_NAME="$(id -un)"
+HOME_DIR="$HOME"
+CARGO_BIN="${HOME_DIR}/.cargo/bin/cargo"
+SRC_DIR="/tmp/${APP_NAME}-src"
 APP_DIR="/opt/${APP_NAME}"
 ENV_DIR="/etc/${APP_NAME}"
 ENV_FILE="${ENV_DIR}/env"
 SERVICE_FILE="/etc/systemd/system/${APP_NAME}.service"
-SRC_DIR="/tmp/${APP_NAME}-src"
 
-# Найти cargo у BUILD_USER
-CARGO_BIN="$(sudo -u "$BUILD_USER" -H bash -lc 'command -v cargo || true')"
-if [[ -z "$CARGO_BIN" ]]; then
-  if sudo -u "$BUILD_USER" test -x "/home/${BUILD_USER}/.cargo/bin/cargo"; then
-    CARGO_BIN="/home/${BUILD_USER}/.cargo/bin/cargo"
+echo "[run] app=${APP_NAME} repo=${REPO_URL} branch=${BRANCH} user=${USER_NAME}"
+
+### 0) проверим cargo
+if [[ ! -x "$CARGO_BIN" ]]; then
+  echo "ERROR: cargo not found at $CARGO_BIN"
+  echo "Установи Rust:  curl https://sh.rustup.rs | sh  &&  source ~/.cargo/env"
+  exit 1
+fi
+
+### 1) ssh-agent при необходимости (только для ssh URL)
+start_ssh_agent_if_needed() {
+  if ! ssh-add -l >/dev/null 2>&1; then
+    echo "[ssh] starting ssh-agent..."
+    eval "$(ssh-agent -s)"
+    # авто-добавление стандартных ключей (если есть). Без ошибок, если их нет.
+    [[ -f "$HOME_DIR/.ssh/id_ed25519" ]] && ssh-add "$HOME_DIR/.ssh/id_ed25519" >/dev/null 2>&1 || true
+    [[ -f "$HOME_DIR/.ssh/id_rsa"     ]] && ssh-add "$HOME_DIR/.ssh/id_rsa"     >/dev/null 2>&1 || true
+    SSH_WAS_STARTED=1
   else
-    echo "ERROR: cargo not found for user ${BUILD_USER}. Install Rust via rustup for that user." >&2
-    exit 1
+    echo "[ssh] agent already running"
+    SSH_WAS_STARTED=0
   fi
-fi
-
-# Инструменты, которые нужны root-процессу
-need_root_bin() { command -v "$1" >/dev/null 2>&1 || { echo "ERROR: '$1' not found in PATH" >&2; exit 1; }; }
-need_root_bin git
-
-# -------- ensure run-user exists --------
-if ! id -u "$RUN_USER" >/dev/null 2>&1; then
-  useradd --system --create-home --shell /usr/sbin/nologin "$RUN_USER"
-fi
-install -d -m0755 "$ENV_DIR" "/var/log/${APP_NAME}"
-
-# -------- Git clone/pull under BUILD_USER with SSH agent --------
-# Весь шаг выполняется в одном shell у
+}
+if [[ "$REPO_URL" =~ ^git@ || "$REPO_URL" =~ ^ssh:// ]]; then
+  sta
