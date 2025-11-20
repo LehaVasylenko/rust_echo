@@ -21,7 +21,8 @@ use crate::model::params::Params;
     ),
     responses(
         (status = 200, description = "Success", body = String),
-        (status = 400, description = "Failed to read a picture")
+        (status = 400, description = "Failed to read a picture"),
+        (status = 400, description = "Drain the water")
     ),
     tag = "ASCII"
 )]

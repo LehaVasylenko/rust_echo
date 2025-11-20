@@ -23,7 +23,8 @@ pub async fn health() -> &'static str {
     request_body = String,
     responses(
         (status = 200, description = "Echoed request summary", body = EchoResponse),
-        (status = 400, description = "Failed to read body")
+        (status = 400, description = "Failed to read body"),
+        (status = 500, description = "Drain the water")
     ),
     tag = "Echo"
 )]
