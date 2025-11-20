@@ -6,38 +6,27 @@ use axum::{
     Json,
 };
 use base64::{Engine};
-use serde::Serialize;
 use std::collections::HashMap;
-
 use crate::state::AppState;
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct EchoResponse {
-    method: String,
-    path: String,
-    query: HashMap<String, String>,
-    headers: HashMap<String, String>,
-    body_kind: BodyKind,
-    body_json: Option<serde_json::Value>,
-    body_text: Option<String>,
-    body_base64: Option<String>,
-    content_length: Option<u64>,
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-enum BodyKind {
-    Json,
-    TextUtf8,
-    Base64,
-    Empty,
-}
+use crate::model::body_kind::BodyKind;
+use crate::model::echo_response::EchoResponse;
 
 pub async fn health() -> &'static str {
     "ok"
 }
 
+#[utoipa::path(
+    get, post, put, delete, patch, options, head,
+    path = "/rust/echo",
+    summary = "Echo request",
+    description = r#"Accepts any request body with any method, including a file. If a file is returned, its contents will be returned in Base 64 format."#,
+    request_body = String,
+    responses(
+        (status = 200, description = "Echoed request summary", body = EchoResponse),
+        (status = 400, description = "Failed to read body")
+    ),
+    tag = "Echo"
+)]
 pub async fn echo(
     State(_): State<AppState>,
     headers: HeaderMap,
@@ -82,17 +71,17 @@ pub async fn echo(
         fallback_text_or_base64(bytes)
     };
 
-    let resp = EchoResponse {
+    let resp = EchoResponse::new(
         method,
         path,
         query,
-        headers: headers_map,
+        headers_map,
         body_kind,
         body_json,
         body_text,
         body_base64,
         content_length,
-    };
+    );
 
     (StatusCode::OK, Json(resp)).into_response()
 }

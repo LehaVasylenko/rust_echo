@@ -6,7 +6,25 @@ use axum::{
 use axum::extract::Query;
 use image::GenericImageView;
 use crate::model::params::Params;
-
+#[utoipa::path(
+    post,
+    path = "/rust/ascii",
+    summary = "Render an image in ASCII",
+    description = r#"Accepts a binary image body (PNG/JPEG/GIF, etc.) and converts it to ASCII art. The scale can be specified using the `scale` query parameter.."#,
+    params(
+        ("scale" = u32, Query, description = "Scale factor, default 3", example = 3)
+    ),
+    request_body(
+        content = String,
+        content_type = "application/octet-stream",
+        description = "Raw image bytes; treated as binary."
+    ),
+    responses(
+        (status = 200, description = "Success", body = String),
+        (status = 400, description = "Failed to read a picture")
+    ),
+    tag = "ASCII"
+)]
 pub async fn ascii_handler(Query(params): Query<Params>, body: Bytes) -> Response {
     let scale = params.get_scale().unwrap_or(3);
     // пробуем прочитать картинку из тела
