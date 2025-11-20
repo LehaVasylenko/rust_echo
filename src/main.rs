@@ -1,15 +1,23 @@
 use std::net::SocketAddr;
 use tracing::info;
-use tracing_subscriber::EnvFilter;
+use crate::shutdown::shutdown;
 
 mod state;
 mod http;
+mod model;
+mod shutdown;
+mod log;
 
 #[tokio::main]
 async fn main() {
     // логи
-    let filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
-    tracing_subscriber::fmt().with_env_filter(filter).with_target(false).compact().init();
+    let (nb, _quard) = tracing_appender::non_blocking(std::io::stdout());
+    tracing_subscriber::fmt()
+        .with_env_filter("info")
+        .json()
+        .with_writer(nb)
+        .flatten_event(true)
+        .init();
 
     // состояние приложения
     let app_state = state::AppState::default();
@@ -20,6 +28,7 @@ async fn main() {
     let addr: SocketAddr = "0.0.0.0:8085".parse().unwrap();
     info!("listening on http://{addr}");
     axum::serve(tokio::net::TcpListener::bind(addr).await.unwrap(), app)
+        .with_graceful_shutdown(shutdown())
         .await
         .unwrap();
 }
