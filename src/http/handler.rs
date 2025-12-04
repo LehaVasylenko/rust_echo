@@ -34,6 +34,7 @@ pub async fn echo(
     Query(query): Query<HashMap<String, String>>,
     req: Request<axum::body::Body>,
 ) -> impl IntoResponse {
+    let limit = 512 * 1024 * 1024;
     let method = req.method().to_string();
     let path = req.uri().path().to_string();
     let content_length = req
@@ -50,7 +51,7 @@ pub async fn echo(
 
     // читаем тело
     let (parts, body) = req.into_parts();
-    let bytes: Bytes = match to_bytes(body, 80 * 1024 * 1024).await {
+    let bytes: Bytes = match to_bytes(body, limit).await {
         Ok(b) => b,
         Err(_) => return (StatusCode::BAD_REQUEST, "failed to read body").into_response(),
     };

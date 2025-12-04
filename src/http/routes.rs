@@ -3,6 +3,7 @@ use axum::extract::DefaultBodyLimit;
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 use crate::http::open_api::ApiDoc;
+use crate::http::upload::upload;
 use crate::log::log_request;
 use crate::state::AppState;
 use super::handler::{echo, health};
@@ -18,5 +19,7 @@ pub fn router(state: AppState) -> Router {
         .route("/rust/ascii", post(ascii_handler)).layer(DefaultBodyLimit::max(limit))
         .merge(SwaggerUi::new("/rust/swagger-ui")
                 .url("/rust/api-docs/openapi.json", spec))
+        .route("/rust/upload", post(upload))
+        .layer(DefaultBodyLimit::max(limit))
         .with_state(state).layer(middleware::from_fn(log_request))
 }
