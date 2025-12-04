@@ -3,11 +3,23 @@ use axum::{
     http::StatusCode,
     response::IntoResponse,
 };
-use futures_util::stream::StreamExt;
 use tokio::{fs::File, io::AsyncWriteExt};
 use std::path::PathBuf;
 use tracing::{error, info};
 
+#[utoipa::path(
+    post,
+    path = "/rust/upload",
+    summary = "Upload request",
+    description = r#"Accepts big files"#,
+    request_body = String,
+    responses(
+        (status = 200, description = "Echoed request summary", body = String),
+        (status = 400, description = "Failed to read body"),
+        (status = 500, description = "Drain the water")
+    ),
+    tag = "Echo"
+)]
 pub async fn upload(mut multipart: Multipart) -> impl IntoResponse {
     while let Ok(Some(field)) = multipart.next_field().await {
         let file_name = field
