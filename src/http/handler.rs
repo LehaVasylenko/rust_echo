@@ -16,8 +16,8 @@ pub async fn health() -> &'static str {
 }
 
 #[utoipa::path(
-    get, post, put, delete, patch, options, head,
-    path = "/rust/echo",
+    get, head, put, delete, patch, options, post,
+    path = "/rust/echo/{*}",
     summary = "Echo request",
     description = r#"Accepts any request body with any method, including a file. If a file is returned, its contents will be returned in Base 64 format."#,
     request_body = String,
@@ -34,7 +34,7 @@ pub async fn echo(
     Query(query): Query<HashMap<String, String>>,
     req: Request<axum::body::Body>,
 ) -> impl IntoResponse {
-    let limit = 512 * 1024 * 1024;
+    let limit = 100 * 1024 * 1024;
     let method = req.method().to_string();
     let path = req.uri().path().to_string();
     let content_length = req

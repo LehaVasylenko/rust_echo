@@ -10,15 +10,17 @@ use tracing::{error, info};
 #[utoipa::path(
     post,
     path = "/rust/upload",
-    summary = "Upload request",
-    description = r#"Accepts big files"#,
-    request_body = String,
+    summary = "Upload file",
+    description = r#"Accepts big files up to 3 Gb"#,
+    request_body(
+        content_type = "multipart/form-data"
+    ),
     responses(
-        (status = 200, description = "Echoed request summary", body = String),
-        (status = 400, description = "Failed to read body"),
+        (status = 200, description = "Uploaded"),
+        (status = 400, description = "Failed to read file"),
         (status = 500, description = "Drain the water")
     ),
-    tag = "Echo"
+    tag = "Upload"
 )]
 pub async fn upload(mut multipart: Multipart) -> impl IntoResponse {
     while let Ok(Some(field)) = multipart.next_field().await {
