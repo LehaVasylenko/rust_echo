@@ -13,7 +13,7 @@ pub fn router(state: AppState) -> Router {
     let limit = 1024 * 1024 * 1024;
     let spec = ApiDoc::openapi();
     Router::new()
-        .route("/rust", get(health))
+        .route("/rust/health", get(health))
         .route("/rust/echo/{*wildcard}", any(echo)).layer(DefaultBodyLimit::max(limit))
         .route("/rust/echo", post(echo)).layer(DefaultBodyLimit::max(limit))
         .route("/rust/ascii", post(ascii_handler)).layer(DefaultBodyLimit::max(limit))

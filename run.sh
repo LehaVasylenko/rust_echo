@@ -10,13 +10,17 @@ BRANCH="main"                                          # ветка
 USER_NAME="$(id -un)"
 HOME_DIR="$HOME"
 CARGO_BIN="${HOME_DIR}/.cargo/bin/cargo"
-SRC_DIR="/tmp/${APP_NAME}-src"
-APP_DIR="/opt/${APP_NAME}"
+
+# ТУТ: теперь код и билд живут в одном нормальном месте
+SRC_DIR="${HOME_DIR}/rust/rust_echo"
+
+# Больше не используем /opt для бинарника, но env всё ещё в /etc
 ENV_DIR="/etc/${APP_NAME}"
 ENV_FILE="${ENV_DIR}/env"
 SERVICE_FILE="/etc/systemd/system/${APP_NAME}.service"
 
 echo "[run] app=${APP_NAME} repo=${REPO_URL} branch=${BRANCH} user=${USER_NAME}"
+echo "[run] src_dir=${SRC_DIR}"
 
 ### 0) проверим cargo
 if [[ ! -x "$CARGO_BIN" ]]; then
@@ -48,7 +52,7 @@ else
   SSH_WAS_STARTED=0
 fi
 
-### 2) git clone/fetch (под текущим пользователем)
+### 2) git clone/fetch в нормальный SRC_DIR
 if [[ -d "$SRC_DIR/.git" ]]; then
   echo "[git] fetch/reset $BRANCH in $SRC_DIR"
   git -C "$SRC_DIR" fetch --all --quiet
@@ -56,6 +60,7 @@ if [[ -d "$SRC_DIR/.git" ]]; then
   git -C "$SRC_DIR" reset --hard "origin/${BRANCH}"
 else
   echo "[git] clone $REPO_URL -> $SRC_DIR (branch $BRANCH)"
+  mkdir -p "$(dirname "$SRC_DIR")"
   rm -rf "$SRC_DIR"
   git clone --branch "$BRANCH" --depth 1 "$REPO_URL" "$SRC_DIR"
 fi
@@ -71,7 +76,7 @@ else
 fi
 popd >/dev/null
 
-### 4) найти имя пакета и бинарь
+### 4) найти имя пакета и бинарь в target/release
 BIN_NAME="$(awk -F'= *' '/^\[package\]/{f=1} f && /^name *=/ {gsub(/"/,"",$2); print $2; exit}' "$SRC_DIR/Cargo.toml" || true)"
 BIN_PATH=""
 if [[ -n "$BIN_NAME" && -f "$SRC_DIR/target/release/$BIN_NAME" ]]; then
@@ -84,10 +89,9 @@ fi
 [[ -n "$BIN_PATH" && -f "$BIN_PATH" ]] || { echo "ERROR: built binary not found"; exit 1; }
 echo "[build] binary: $BIN_PATH"
 
-### 5) deploy + systemd (требует sudo)
-echo "[sudo] устанавливаю файлы и systemd-юнит"
-sudo install -d -m0755 "$APP_DIR" "$ENV_DIR"
-sudo install -m0755 "$BIN_PATH" "${APP_DIR}/${APP_NAME}"
+### 5) deploy + systemd (юнит запускает binary ИЗ target)
+echo "[sudo] создаю ENV и systemd-юнит"
+sudo install -d -m0755 "$ENV_DIR"
 
 # env-файл: правь тут RUST_LOG/APP_OPTS по вкусу
 sudo tee "$ENV_FILE" >/dev/null <<EOF
@@ -96,7 +100,8 @@ APP_OPTS=${APP_OPTS:-}
 EOF
 sudo chmod 0644 "$ENV_FILE"
 
-# unit-файл: сервис будет работать ПОД ТЕКУЩИМ пользователем
+# unit-файл: сервис будет работать ПОД ТЕКУЩИМ пользователем,
+# WorkingDirectory = SRC_DIR, а ExecStart = бинарь в target/release
 sudo tee "$SERVICE_FILE" >/dev/null <<EOF
 [Unit]
 Description=${APP_NAME} (Rust)
@@ -106,10 +111,10 @@ Wants=network-online.target
 [Service]
 Type=simple
 User=${USER_NAME}
-WorkingDirectory=${APP_DIR}
+WorkingDirectory=${SRC_DIR}
 EnvironmentFile=${ENV_FILE}
 Environment=RUST_LOG=\$RUST_LOG
-ExecStart=${APP_DIR}/${APP_NAME} \$APP_OPTS
+ExecStart=${BIN_PATH} \$APP_OPTS
 Restart=always
 RestartSec=2
 LimitNOFILE=65536
