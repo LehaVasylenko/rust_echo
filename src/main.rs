@@ -1,4 +1,5 @@
 use std::net::SocketAddr;
+use mimalloc::MiMalloc;
 use tracing::info;
 use crate::shutdown::shutdown;
 
@@ -7,7 +8,8 @@ mod http;
 mod model;
 mod shutdown;
 mod log;
-
+#[global_allocator]
+static GLOBAL: MiMalloc = MiMalloc;
 #[tokio::main]
 async fn main() {
     // логи

@@ -65,9 +65,9 @@ echo "[build] cargo build --release"
 export PATH="$HOME_DIR/.cargo/bin:$PATH"
 pushd "$SRC_DIR" >/dev/null
 if [[ -f Cargo.lock ]]; then
-  "$CARGO_BIN" build --release --locked
+  RUSTFLAGS="-C target-cpu=native" "$CARGO_BIN" build --release --locked
 else
-  "$CARGO_BIN" build --release
+  RUSTFLAGS="-C target-cpu=native" "$CARGO_BIN" build --release
 fi
 popd >/dev/null
 
