@@ -49,7 +49,6 @@ pub async fn ascii_handler(Query(params): Query<Params>, body: Bytes) -> Respons
         .into_response()
 }
 
-/// конвертим картинку в ASCII
 fn image_to_ascii(img: &image::DynamicImage, scale: u32) -> String {
     let (w, h) = img.dimensions();
     let mut out = String::new();

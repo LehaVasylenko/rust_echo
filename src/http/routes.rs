@@ -9,7 +9,7 @@ use super::handler::{echo, health};
 use super::ascii::{ascii_handler};
 
 pub fn router(state: AppState) -> Router {
-    let limit = 20 * 1024 * 1024;
+    let limit = 1024 * 1024 * 1024;
     let spec = ApiDoc::openapi();
     Router::new()
         .route("/rust", get(health))
