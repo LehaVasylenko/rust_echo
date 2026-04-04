@@ -12,7 +12,7 @@ use crate::state::AppState;
 use super::handler::{echo, health};
 use super::ascii::{ascii_handler};
 
-pub fn router(state: Arc<AppState>) -> Router {
+pub fn router(state: AppState) -> Router {
     let limit_upload = 3 * 1024 * 1024 * 1024; // 3Gb
     let limit = 100 * 1024 * 1024; // 100Mb
     let spec = ApiDoc::openapi();
@@ -26,5 +26,5 @@ pub fn router(state: Arc<AppState>) -> Router {
                 .url("/rust/api-docs/openapi.json", spec))
         .route("/rust/clean", get(cleaner))
         .route("/rust/upload", post(upload)).layer(DefaultBodyLimit::max(limit_upload))
-        .with_state((*state).clone()).layer(middleware::from_fn(log_request))
+        .with_state(state).layer(middleware::from_fn(log_request))
 }
