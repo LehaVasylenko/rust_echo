@@ -71,7 +71,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let app_state = Arc::new(state::AppState::default());
 
     // 3. Определяем количество ядер
-    let num_cores = num_cpus::get() * 2;
+    let num_cores = num_cpus::get();
     info!("Starting server on {} cores", num_cores);
 
     let mut handles = Vec::new();
