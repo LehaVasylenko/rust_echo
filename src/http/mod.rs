@@ -4,3 +4,4 @@ pub mod ascii;
 pub mod open_api;
 pub mod upload;
 mod cleaner;
+pub mod hello;

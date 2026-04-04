@@ -20,6 +20,7 @@ use tracing::{error, info, warn};
     ),
     tag = "Upload"
 )]
+#[inline(always)]
 pub async fn upload(mut multipart: Multipart) -> Response {
     let mut saw_any_part = false;
     let mut files_log = Vec::<FileLog>::new();
@@ -100,9 +101,6 @@ pub async fn upload(mut multipart: Multipart) -> Response {
         warn!("multipart upload: empty request (no parts)");
         return (StatusCode::BAD_REQUEST, "multipart body is empty").into_response();
     }
-
-    // Сводка "как httpbin": что было в files, что в form
-    info!("multipart upload summary: files={files_log:#?}, form={form_log:#?}");
 
     (StatusCode::OK, format!("{:#?}\n{:#?}", files_log, form_log)).into_response()
 }

@@ -28,6 +28,7 @@ pub async fn health() -> &'static str {
     ),
     tag = "Echo"
 )]
+#[inline(always)]
 pub async fn echo(
     State(_): State<AppState>,
     headers: HeaderMap,
@@ -88,6 +89,7 @@ pub async fn echo(
     (StatusCode::OK, Json(resp)).into_response()
 }
 
+#[inline(always)]
 fn fallback_text_or_base64(bytes: Bytes) -> (BodyKind, Option<serde_json::Value>, Option<String>, Option<String>) {
     match std::str::from_utf8(&bytes) {
         Ok(s) => (BodyKind::TextUtf8, None, Some(s.to_string()), None),

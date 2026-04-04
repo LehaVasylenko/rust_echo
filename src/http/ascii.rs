@@ -26,6 +26,7 @@ use crate::model::params::Params;
     ),
     tag = "ASCII"
 )]
+#[inline(always)]
 pub async fn ascii_handler(Query(params): Query<Params>, body: Bytes) -> Response {
     let scale = params.get_scale().unwrap_or(3);
     // пробуем прочитать картинку из тела

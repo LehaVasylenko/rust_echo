@@ -14,6 +14,7 @@ use axum::response::IntoResponse;
     ),
     tag = "Upload"
 )]
+#[inline(always)]
 pub async fn cleaner() -> impl IntoResponse {
     let file_path = PathBuf::from("uploads");
     match std::fs::remove_dir_all(&file_path) {
