@@ -7,6 +7,7 @@ use axum::{
 };
 use base64::{Engine};
 use std::collections::HashMap;
+use std::sync::Arc;
 use crate::state::AppState;
 use crate::model::body_kind::BodyKind;
 use crate::model::echo_response::EchoResponse;
@@ -30,7 +31,7 @@ pub async fn health() -> &'static str {
 )]
 #[inline(always)]
 pub async fn echo(
-    State(_): State<AppState>,
+    State(_): State<Arc<AppState>>,
     headers: HeaderMap,
     Query(query): Query<HashMap<String, String>>,
     req: Request<axum::body::Body>,
