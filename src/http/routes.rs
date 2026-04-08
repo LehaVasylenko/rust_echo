@@ -4,7 +4,7 @@ use axum::extract::DefaultBodyLimit;
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 use crate::http::cleaner::cleaner;
-use crate::http::hello::{hello, test_handler};
+use crate::http::hello::{hello, set_sleep, test_handler};
 use crate::http::open_api::ApiDoc;
 use crate::http::upload::upload;
 use crate::log::log_request;
@@ -23,6 +23,7 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/rust/ascii", post(ascii_handler)).layer(DefaultBodyLimit::max(limit))
         .route("/rust/hello", get(hello))
         .route("/rust/test", any(test_handler))
+        .route("/rust/sleep/{*ms}", get(set_sleep))
         .merge(SwaggerUi::new("/rust/swagger-ui")
                 .url("/rust/api-docs/openapi.json", spec))
         .route("/rust/clean", get(cleaner))

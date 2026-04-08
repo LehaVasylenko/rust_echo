@@ -68,7 +68,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let addr: SocketAddr = "0.0.0.0:8085".parse()?;
 
     // 2. Шарим состояние через Arc
-    let app_state = Arc::new(state::AppState::default());
+    let app_state = Arc::new(state::AppState::new(2000));
 
     // 3. Определяем количество ядер
     let num_cores = num_cpus::get();
