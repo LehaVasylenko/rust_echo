@@ -38,6 +38,7 @@ pub async fn hello() -> &'static str {
 #[inline(always)]
 pub async fn test_handler(v: Version) -> impl IntoResponse {
     let start_time = Local::now().format("%H:%M:%S.3f").to_string();
-    info!("[{}] REQUEST: {:?} {:?}", start_time, thread::current().id(), v);
-    "OK"
+    let f = format!("[{}] REQUEST: {:?} {:?}", start_time, thread::current().id(), v);
+    info!("{}", &f);
+    f
 }
