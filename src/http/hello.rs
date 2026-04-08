@@ -40,7 +40,7 @@ pub async fn hello() -> &'static str {
 )]
 #[inline(always)]
 pub async fn test_handler(State(state): State<Arc<AppState>>, v: Version) -> impl IntoResponse {
-    let start_time = Local::now().format("%H:%M:%S.3f").to_string();
+    let start_time = Local::now().format("%H:%M:%S%.3f").to_string();
     let f = format!("[{}] REQUEST: {:?} {:?}", start_time, thread::current().id(), v);
     let current_sleep = state.sleeptime();
     tokio::time::sleep(std::time::Duration::from_millis(current_sleep)).await;

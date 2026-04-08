@@ -8,7 +8,10 @@ use crate::model::echo_response::EchoResponse;
         crate::http::ascii::ascii_handler,
         crate::http::handler::echo,
         crate::http::upload::upload,
-        crate::http::cleaner::cleaner
+        crate::http::cleaner::cleaner,
+        crate::http::hello::hello,
+        crate::http::hello::test_handler,
+        crate::http::hello::set_sleep,
     ),
     components(schemas(BodyKind, EchoResponse)),
     tags((name = "Echo", description = "Echo Service"))
