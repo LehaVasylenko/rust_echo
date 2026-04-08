@@ -21,6 +21,8 @@ mimalloc = "0.1"
 socket2 = "0.6.3"
 num_cpus = "1.0"
 core_affinity = "0.8"
+chrono = "0.4.43"
+log = "0.4.28"
 
 [profile.release]
 opt-level = 3
